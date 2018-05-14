@@ -1,0 +1,65 @@
+last dockerfile ``` FROM python:3
+
+MAINTAINER RMA romain.martinelli@worldline.com
+
+#BUILD
+# docker build --rm -t ancible-bastion . --build-arg http_proxy=http://proxy-internet.localnet:3128
+
+RUN apt-get update
+RUN pip install ansible --upgrade --proxy "$http_proxy"
+
+ENV ANSIBLE_HOST_KEY_CHECKING false
+
+#install ssh
+RUN apt-get install openssh-client
+
+#install graphiz tools to convert .dot to .png
+
+RUN  apt-get -y install graphviz
+
+#install serverspec
+#install ruby 2.3
+RUN wget https://cache.ruby-lang.org/pub/ruby/2.3/ruby-2.3.0.tar.gz && \
+    tar xvfz ruby-2.3.0.tar.gz && \
+    cd ruby-2.3.0 && \
+    ./configure && \
+    make && \
+    make install && \
+    rm -rf RUBY
+   
+
+
+RUN gem install net-ssh -v 4.2.0
+RUN gem install rake \
+    rspec \
+    serverspec \
+    ansible_spec \
+    bundler
+
+# #remonter ce block
+# # RUN apt-get install -y epel-release
+# # RUN  yum install ansible -y --enablerepo=epel
+# RUN pip install ansible-lint --upgrade --proxy "$http_proxy"
+# # RUN apt-get install -y ansible-lint
+# #RUN add-apt-repository ppa:duggan/bats
+# # RUN curl --silent -L https://github.com/sstephenson/bats/archive/v0.4.0.tar.gz -o /tmp/bats.tgz
+# # RUN tar xf /tmp/bats.tgz -C /tmp
+# # RUN bash /tmp/bats-0.4.0/install.sh /usr/local
+# # RUN bats --version
+
+# # RUN curl --silent -o /tmp/nomad.zip  https://releases.hashicorp.com/nomad/0.6.2/nomad_0.6.2_linux_amd64.zip
+# # RUN gunzip -c /tmp/nomad.zip > /bin/nomad
+# # RUN chmod +x /bin/nomad
+#create user
+RUN adduser ancible
+COPY ssh /home/ancible/.ssh
+COPY .bashrc /home/ancible/
+
+RUN chown -R ancible /home/ancible/.ssh && \
+    chmod 600 /home/ancible/.ssh/id*
+
+USER ancible
+WORKDIR /home/ancible/work
+
+ENTRYPOINT  ["/bin/bash"]
+ ```
